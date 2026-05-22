@@ -6,6 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "npm run test:e2e",
+    "test:e2e": "playwright test --pass-with-no-tests",
+    "test:e2e:ui": "playwright test --ui",
     "lint": "eslint"
   },
   "dependencies": {
@@ -14,7 +17,10 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@playwright/test": "1.54.1",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
