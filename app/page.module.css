@@ -1,0 +1,30 @@
+.centeringContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+
+  height: 100%;
+  width: 100%;
+
+  background-color: var(--background);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 2);
+  max-width: calc(var(--spacing) * 120);
+  width: 100%;
+  flex-grow: 0;
+  padding: calc(var(--spacing) * 2);
+
+  .header {
+    display: flex;
+    gap: calc(var(--spacing) * 2);
+  }
+
+  .searchBar {
+    width: 100%;
+  }
+}
