@@ -77,13 +77,14 @@ export default function RepositorySearch(props: RepositorySearchProps) {
     const rawParam = searchParams.get("page");
     const output = rawParam ? Number.parseInt(rawParam) : undefined;
     return output;
-  }, []);
+  }, [searchParams]);
 
   const router = useRouter();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<RepositoryItemProps[]>([]);
   const [totalPages, setTotalPages] = useState(0);
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   const computeNewUrl = useCallback((page: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -92,25 +93,35 @@ export default function RepositorySearch(props: RepositorySearchProps) {
   }, [searchParams]);
 
   const fetchData = useCallback(async (searchQuery: string, page: number) => {
-    const apiUrl = new URL("https://api.github.com/search/repositories");
-    apiUrl.searchParams.append("q", searchQuery);
-    apiUrl.searchParams.append("page", `${page}`);
-    const data = await fetch(apiUrl);
-    const json = await data.json();
+    setStatus("loading");
+    try {
+      const apiUrl = new URL("https://api.github.com/search/repositories");
+      apiUrl.searchParams.append("q", searchQuery);
+      apiUrl.searchParams.append("page", `${page}`);
 
-    setSearchResults(json.items.map((item: unknown) => mapToRepositoryItemProps(item)));
-    setTotalPages(json.total_count);
+      const data = await fetch(apiUrl);
+      if (!data.ok) {
+        setStatus("error");
+        setSearchResults([]);
+        setTotalPages(0);
+        return;
+      }
+
+      const json = await data.json();
+
+      setSearchResults(json.items.map((item: unknown) => mapToRepositoryItemProps(item)));
+      setTotalPages(json.total_count);
+      setStatus("success");
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return;
+      setStatus("error");
+    }
   }, [setSearchResults, setTotalPages]);
 
   useEffect(() => {
     if (query) {
-      setSearchQuery(query)
-    }
-  }, []);
-
-  useEffect(() => {
-    if (query) {
       fetchData(query, currentPage ?? 1);
+      setSearchQuery(query)
     }
     else {
       setSearchResults([]);
@@ -133,7 +144,7 @@ export default function RepositorySearch(props: RepositorySearchProps) {
           <SearchIcon />
         </Button>
       </ButtonGroup>
-      {searchResults.length === 0 ? <Empty className={styles.emptyState}>
+      {status === "error" ? <>error</> : status === "loading" ? <>loading</> : status === "idle" ? <></> : searchResults.length === 0 ? <Empty className={styles.emptyState}>
         <Ghost size={48} />
         No Results</Empty> : <ol className={styles.repositoryList} aria-label="Search Results">
         {searchResults.map(searchResult => <RepositoryItem key={searchResult.id} {...searchResult} />)}
