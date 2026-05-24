@@ -4,7 +4,7 @@ import { Empty } from "@/components/ui/empty";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from "@/components/ui/item";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./RepositorySearch.module.css";
-import { ExternalLinkIcon, SearchIcon } from "lucide-react";
+import { ExternalLinkIcon, Ghost, SearchIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
@@ -133,7 +133,9 @@ export default function RepositorySearch(props: RepositorySearchProps) {
           <SearchIcon />
         </Button>
       </ButtonGroup>
-      {searchResults.length === 0 ? <Empty className={styles.emptyState}>No Results</Empty> : <ol className={styles.repositoryList} aria-label="Search Results">
+      {searchResults.length === 0 ? <Empty className={styles.emptyState}>
+        <Ghost size={48} />
+        No Results</Empty> : <ol className={styles.repositoryList} aria-label="Search Results">
         {searchResults.map(searchResult => <RepositoryItem key={searchResult.id} {...searchResult} />)}
       </ol>}
       <Pagination>
