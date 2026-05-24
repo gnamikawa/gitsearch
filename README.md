@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GitSearch
+
+A web application for searching GitHub repositories using the GitHub public search API. Results are paginated, deep-linkable via URL query parameters, and each result links out to the repository on GitHub.
+
+> [!WARNING]
+> This web application uses the public [Github API](https://docs.github.com/en/rest/search/search?apiVersion=2026-03-10#search-repositories). Navigating quickly through search results or paginating rapidly can exhaust the unauthenticated rate limit, causing searches to fail until the limit resets. If you run into this, wait a minute or two before attempting to navigate again.
+
+## Features
+
+- Search GitHub repositories by keyword
+- Paginated results (up to 34 pages, reflecting GitHub's 1,000-result cap)
+- URL-driven state — search queries and page numbers are stored in the URL
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- **Node.js** v20 or later
+- **npm** v10 or later (bundled with Node.js)
+
+If you use [Nix](https://nixos.org/), a `flake.nix` is included that provides a reproducible development shell with the correct Node.js version. Run `nix develop` to enter it.
+
+### Installation
+
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/gnamikawa/gitsearch.git
+cd gitsearch
+npm install
+```
+
+### Running the Development Server
+
+Run the below command, and then open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Running Tests
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### All tests
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This runs unit tests followed by end-to-end tests.
 
-## Learn More
+```bash
+npm test
+```
 
-To learn more about Next.js, take a look at the following resources:
+### Unit tests only
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Unit tests use [Vitest](https://vitest.dev/) and [Testing Library](https://testing-library.com/).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run test:unit
+```
 
-## Deploy on Vercel
+### End-to-end tests only
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+End-to-end tests use [Playwright](https://playwright.dev/).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run test:e2e
+```
