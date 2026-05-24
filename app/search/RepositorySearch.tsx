@@ -166,7 +166,7 @@ export default function RepositorySearch(props: RepositorySearchProps) {
             </PaginationItem>
 
             <PaginationItem key="currentpage">
-              <PaginationLink href={computeNewUrl(currentPage)} isActive>
+              <PaginationLink href={computeNewUrl(currentPage)} isActive aria-current="page">
                 {currentPage}
               </PaginationLink>
             </PaginationItem>

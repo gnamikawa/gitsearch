@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
-import mockData from '@/mocks/mockGithubResponse.json';
+import mockDataPage1 from '@/mocks/mockGithubResponsePage1.json';
+import mockDataPage2 from '@/mocks/mockGithubResponsePage2.json';
 
 test.describe('Page', () => {
   test('can search from the homepage and navigate to an external website (github) in a new tab', async ({ page, context }) => {
@@ -13,9 +14,9 @@ test.describe('Page', () => {
         route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify(mockData),
+          body: JSON.stringify(mockDataPage1),
         });
-      } else if (url.includes(mockData.items[0].html_url)) {
+      } else if (url.includes(mockDataPage1.items[0].html_url)) {
         // Replace request to github with a simple "success"
         route.fulfill({
           status: 200,
@@ -56,9 +57,9 @@ test.describe('Page', () => {
         route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify(mockData),
+          body: JSON.stringify(mockDataPage1),
         });
-      } else if (url.includes(mockData.items[0].html_url)) {
+      } else if (url.includes(mockDataPage1.items[0].html_url)) {
         // Replace request to github with a simple "success"
         route.fulfill({
           status: 200,
@@ -87,4 +88,100 @@ test.describe('Page', () => {
 
     await expect(interceptPage).toHaveText("success");
   })
+
+  test('can navigate to next page via pagination', async ({ page, context }) => {
+    await context.route('**/*', route => {
+      const url = route.request().url();
+      if (url.includes('http://localhost:3000')) {
+        // Allow internal reroutes
+        route.continue();
+      } else if (url.includes("https://api.github.com/search/repositories")) {
+        // Replace request with real github data
+        const urlObject = new URL(url);
+        const pageNumber = urlObject.searchParams.get("page");
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(pageNumber === "2" ? mockDataPage2 : mockDataPage1),
+        });
+      } else {
+        // Prevent external web-requests to prevent flaky tests
+        route.abort();
+      }
+    });
+
+    await page.goto('/')
+
+    const homepageSearchInput = page.getByRole("searchbox");
+    await homepageSearchInput.fill("mock");
+    await homepageSearchInput.press("Enter");
+
+    // Page 1
+    const firstPageFirstItem = page.getByRole("listitem").first();
+    const firstPageFirstItemHeading = firstPageFirstItem.getByText(mockDataPage1.items[0].full_name);
+    await expect(firstPageFirstItemHeading).toBeVisible();
+
+    const activePageFirstPage = page.locator('[aria-current="page"]');
+    await expect(activePageFirstPage).toHaveText('1');
+
+    // Navigate
+    const pagination = page.getByRole("navigation");
+    const nextPageButton = pagination.getByText("Next");
+    await nextPageButton.click();
+
+    // Page 2
+    const secondPageFirstItem = page.getByRole("listitem").first();
+    const secondPageFirstItemHeading = secondPageFirstItem.getByText(mockDataPage2.items[0].full_name);
+    await expect(secondPageFirstItemHeading).toBeVisible();
+
+    const activePageSecondPage = page.locator('[aria-current="page"]');
+    await expect(activePageSecondPage).toHaveText('2');
+  })
+
+  test('can navigate to previous page via pagination', async ({ page, context }) => {
+    await context.route('**/*', route => {
+      const url = route.request().url();
+      if (url.includes('http://localhost:3000')) {
+        // Allow internal reroutes
+        route.continue();
+      } else if (url.includes("https://api.github.com/search/repositories")) {
+        // Replace request with real github data
+        const urlObject = new URL(url);
+        const pageNumber = urlObject.searchParams.get("page");
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(pageNumber === "2" ? mockDataPage2 : mockDataPage1),
+        });
+      } else {
+        // Prevent external web-requests to prevent flaky tests
+        route.abort();
+      }
+    });
+
+    await page.goto('/search?q=mock&page=2')
+
+    // Page 2
+    const secondPageFirstItem = page.getByRole("listitem").first();
+    const secondPageFirstItemHeading = secondPageFirstItem.getByText(mockDataPage2.items[0].full_name);
+    await expect(secondPageFirstItemHeading).toBeVisible();
+
+    const activePageSecondPage = page.locator('[aria-current="page"]');
+    await expect(activePageSecondPage).toHaveText('2');
+
+    // Navigate
+    const pagination = page.getByRole("navigation");
+    const nextPageButton = pagination.getByText("Previous");
+    await nextPageButton.click();
+
+    // Page 1
+    const firstPageFirstItem = page.getByRole("listitem").first();
+    const firstPageFirstItemHeading = firstPageFirstItem.getByText(mockDataPage1.items[0].full_name);
+    await expect(firstPageFirstItemHeading).toBeVisible();
+
+    const activePageFirstPage = page.locator('[aria-current="page"]');
+    await expect(activePageFirstPage).toHaveText('1');
+  })
+
+
 })

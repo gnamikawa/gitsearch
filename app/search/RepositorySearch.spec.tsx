@@ -3,7 +3,7 @@ import { screen, render, waitFor, within } from "@testing-library/react";
 import userEvent from '@testing-library/user-event';
 import { useSearchParams, useRouter } from 'next/navigation';
 import RepositorySearch, { RepositoryItem } from "./RepositorySearch";
-import mockData from '@/mocks/mockGithubResponse.json';
+import mockData from '@/mocks/mockGithubResponsePage1.json';
 
 vi.mock('next/navigation', () => ({
   useSearchParams: vi.fn(),
