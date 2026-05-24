@@ -92,6 +92,8 @@ export default function RepositorySearch(props: RepositorySearchProps) {
   }, [searchParams]);
 
   const fetchData = useCallback(async (searchQuery: string, page: number) => {
+    const DEFAULT_ITEMS_PER_PAGE = 30;
+
     setStatus("loading");
     try {
       const apiUrl = new URL("https://api.github.com/search/repositories");
@@ -109,7 +111,7 @@ export default function RepositorySearch(props: RepositorySearchProps) {
       const json = await data.json();
 
       setSearchResults(json.items.map((item: unknown) => mapToRepositoryItemProps(item)));
-      setTotalPages(json.total_count);
+      setTotalPages(Math.ceil(Math.min(json.total_count, 1000) / DEFAULT_ITEMS_PER_PAGE));
       setStatus("success");
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return;
