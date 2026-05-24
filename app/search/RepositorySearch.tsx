@@ -52,7 +52,7 @@ export function RepositoryItem(props: RepositoryItemProps) {
   return (
     <li>
       <Item variant="outline" render={
-        <a href={props.url} aria-label={props.header}>
+        <a target="_blank" rel="noopener noreferrer" href={props.url} aria-label={props.header}>
           <ItemContent>
             <ItemTitle children={props.header} />
             <ItemDescription children={props.description} />
