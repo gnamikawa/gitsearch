@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import mockDataPage1 from '@/mocks/mockGithubResponsePage1.json';
 import mockDataPage2 from '@/mocks/mockGithubResponsePage2.json';
+import mockDataPage35 from '@/mocks/mockGithubResponsePage35.json';
 
 test.describe('Page', () => {
   test('can search from the homepage and navigate to an external website (github) in a new tab', async ({ page, context }) => {
@@ -28,7 +29,7 @@ test.describe('Page', () => {
       }
     });
 
-    await page.goto('/')
+    await page.goto('/');
 
     const homepageSearchInput = page.getByRole("searchbox");
     await homepageSearchInput.fill("mock");
@@ -71,7 +72,7 @@ test.describe('Page', () => {
       }
     });
 
-    await page.goto('/search')
+    await page.goto('/search');
 
     const homepageSearchInput = page.getByRole("searchbox");
     await homepageSearchInput.fill("mock");
@@ -110,7 +111,7 @@ test.describe('Page', () => {
       }
     });
 
-    await page.goto('/')
+    await page.goto('/');
 
     const homepageSearchInput = page.getByRole("searchbox");
     await homepageSearchInput.fill("mock");
@@ -159,7 +160,7 @@ test.describe('Page', () => {
       }
     });
 
-    await page.goto('/search?q=mock&page=2')
+    await page.goto('/search?q=mock&page=2');
 
     // Page 2
     const secondPageFirstItem = page.getByRole("listitem").first();
@@ -183,5 +184,88 @@ test.describe('Page', () => {
     await expect(activePageFirstPage).toHaveText('1');
   })
 
+  test('will only render up to 34 pages', async ({ page, context }) => {
+    await context.route('**/*', route => {
+      const url = route.request().url();
+      if (url.includes('http://localhost:3000')) {
+        // Allow internal reroutes
+        route.continue();
+      } else if (url.includes("https://api.github.com/search/repositories")) {
+        // Replace request with real github data
+        const urlObject = new URL(url);
+        const pageNumber = urlObject.searchParams.get("page");
+        const page34 = {
+          "total_count": 1000, // 1000 is the max number of items that github will serve
+          "incomplete_results": false,
+          "items": [ // We dont need items except 1. We simply need to check that page 35 does not render without having no items.
+            mockDataPage1.items[0]
+          ]
+        };
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(pageNumber === "34" ? page34 : mockDataPage35),
+        });
+      } else {
+        // Prevent external web-requests to prevent flaky tests
+        route.abort();
+      }
+    });
+
+
+    // Page 34
+    await page.goto('/search?q=mock&page=34');
+    const activePageFirstPage = page.locator('[aria-current="page"]');
+    await expect(page.getByText('Next')).not.toBeVisible();
+    await expect(page.getByText('Prev')).toBeVisible();
+    await expect(activePageFirstPage).toHaveText('34');
+
+    // Page 35
+    await page.goto('/search?q=mock&page=35');
+    const errorText = page.getByText('error');
+    await expect(errorText).toBeVisible();
+  })
+
+  test('will not render pages under page 1', async ({ page, context }) => {
+    await context.route('**/*', route => {
+      const url = route.request().url();
+      if (url.includes('http://localhost:3000')) {
+        // Allow internal reroutes
+        route.continue();
+      } else if (url.includes("https://api.github.com/search/repositories")) {
+        // Replace request with real github data
+        const urlObject = new URL(url);
+        const pageNumber = urlObject.searchParams.get("page");
+        const page34 = {
+          "total_count": 1000, // 1000 is the max number of items that github will serve
+          "incomplete_results": false,
+          "items": [ // We dont need items except 1. We simply need to check that page 35 does not render without having no items.
+            mockDataPage1.items[0]
+          ]
+        };
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(pageNumber === "34" ? page34 : mockDataPage35),
+        });
+      } else {
+        // Prevent external web-requests to prevent flaky tests
+        route.abort();
+      }
+    });
+
+
+    // Page 34
+    await page.goto('/search?q=mock&page=34');
+    const activePageFirstPage = page.locator('[aria-current="page"]');
+    await expect(page.getByText('Next')).not.toBeVisible();
+    await expect(page.getByText('Prev')).toBeVisible();
+    await expect(activePageFirstPage).toHaveText('34');
+
+    // Page 35
+    await page.goto('/search?q=mock&page=35');
+    const errorText = page.getByText('error');
+    await expect(errorText).toBeVisible();
+  })
 
 })

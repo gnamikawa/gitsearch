@@ -121,7 +121,9 @@ export default function RepositorySearch(props: RepositorySearchProps) {
 
   useEffect(() => {
     if (query) {
-      fetchData(query, currentPage ?? 1);
+      const currentPageOrDefault = currentPage ?? 1;
+      if (currentPageOrDefault <= 0) router.replace(computeNewUrl(1));
+      fetchData(query, currentPageOrDefault);
       setSearchQuery(query)
     }
     else {
